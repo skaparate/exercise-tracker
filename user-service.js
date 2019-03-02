@@ -24,10 +24,35 @@ class UserService {
         });
     }
 
-    findUser(userName, cb) {
-        User.findOne({ username: userName }, function (findErr, result) {
-            if (findErr) return cb(serviceHelper.error(findErr), null);
-            return cb(findErr, result);
+    findUser(by, cb) {
+        function userSearch(error, user) {
+            if (error) return cb(serviceHelper.error(error), null);
+            return cb(null, serviceHelper.ok(user));
+        }
+
+        if (by.hasOwnProperty('_id')) {
+            User.findById(by._id, userSearch);
+        } else {
+            User.findOne(by, userSearch);
+        }
+    }
+
+    addExercise(exercise, cb) {
+        this.findUser({
+            _id: exercise.userId
+        }, function(searchErr, user) {
+            if (searchErr) return cb(searchErr, null);
+            if (!user) {
+                return cb(serviceHelper.notFound({
+                    entity: 'user',
+                    userId: userId
+                }));
+            }
+            const model = new Exercise(exercise);
+            return model.save(function(saveErr, savedExercise) {
+                if (saveErr) return cb(serviceHelper.error(saveErr), null);
+                return cb(serviceHelper.ok(savedExercise));
+            });
         });
     }
 }

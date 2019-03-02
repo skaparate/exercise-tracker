@@ -6,6 +6,7 @@ class HttpResponse {
         if (serviceResponse.error) {
             const data = this._builData(serviceResponse.data, serviceResponse.error);
             switch (serviceResponse.error) {
+                case 'not found':
                 case 'duplicate':
                 case 'illegal':
                     this._status = 400;
@@ -24,8 +25,10 @@ class HttpResponse {
 
     _builData(data, error) {
         if (data.hasOwnProperty('entity')) {
+            const entity = data.entity;
+            delete data.entity;
             return {
-                error: error + ' ' + data.entity,
+                error: _formatError(error, entity),
                 data
             };
         }
@@ -46,6 +49,13 @@ class HttpResponse {
     buildResponse() {
         return this._responseObj.status(this.status)
             .send(this.body);
+    }
+
+    _formatError(entity, error) {
+        if (error == 'not found') {
+            return entity + ' ' + error;
+        }
+        return error + ' ' + entity;
     }
 }
 

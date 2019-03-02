@@ -29,6 +29,10 @@ class ServiceHelper {
     error(data) {
         return new ResponseEntity('error', data);
     }
+
+    notFound(data) {
+        return new ResponseEntity('not found', data);
+    }
 }
 
 module.exports = {
