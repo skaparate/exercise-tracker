@@ -1,0 +1,32 @@
+{
+  "name": "exercise-tracker",
+  "version": "0.0.1",
+  "description": "Free Code Camp exercise tracker app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skaparate/exercise-tracker.git"
+  },
+  "keywords": [
+    "freecodecamp",
+    "nodejs",
+    "express"
+  ],
+  "author": "Nicolas Mancilla",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/skaparate/exercise-tracker/issues"
+  },
+  "homepage": "https://github.com/skaparate/exercise-tracker#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "dotenv": "^6.2.0",
+    "express": "^5.0.0-alpha.2",
+    "mongodb": "^3.1.13",
+    "mongoose": "^5.4.16"
+  }
+}
