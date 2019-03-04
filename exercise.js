@@ -21,7 +21,17 @@ router.post('/add', function (req, res) {
 })
 
 router.get('/log', function (req, res) {
-
+    console.log('Querying exercise data', req.body, req.params, req.query);
+    const query = {
+        userId: req.query.userId,
+        from: req.query.from,
+        to: req.query.to,
+        limit: req.query.limit
+    };
+    userService.loadLogs(query,
+        function(response) {
+            return new HttpResponse(res, response).buildResponse();
+        });
 });
 
 module.exports = router;

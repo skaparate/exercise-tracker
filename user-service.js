@@ -1,6 +1,7 @@
 const ServiceHelper = require('./service-response').ServiceHelper;
 const serviceHelper = new ServiceHelper();
 const [User, Exercise] = require('./models');
+const { isValidDate } = require('./utils');
 
 class UserService {
     createUser(data, callback) {
@@ -41,7 +42,7 @@ class UserService {
         this.findUser({
             _id: exercise.userId
         }, function(searchErr, user) {
-            if (searchErr) return cb(searchErr, null);
+            if (searchErr) return cb(serviceHelper.error(searchErr));
             if (!user) {
                 return cb(serviceHelper.notFound({
                     entity: 'user',
@@ -50,8 +51,48 @@ class UserService {
             }
             const model = new Exercise(exercise);
             return model.save(function(saveErr, savedExercise) {
-                if (saveErr) return cb(serviceHelper.error(saveErr), null);
+                if (saveErr) return cb(serviceHelper.error(saveErr));
                 return cb(serviceHelper.ok(savedExercise));
+            });
+        });
+    }
+
+    loadLogs(log, cb) {
+        console.log('Loading logs: ', log);
+        this.findUser({
+            _id: log.userId
+        }, function(searchErr, user) {
+            console.log('User found');
+            if (searchErr) return cb(serviceHelper.error(searchErr));
+            if (!user) {
+                return cb(serviceHelper.notFound({
+                    entity: 'user',
+                    userId: log.userId
+                }));
+            }
+            const q = Exercise.find({
+                userId: log.userId
+            });
+            let date = new Date(log.from);
+            if (isValidDate(date)) {
+                console.log('valid fromDate:', date);
+                q.where('date').gte(date);
+            }
+            date = new Date(log.to);
+            if (isValidDate(date)) {
+                console.log('valid toDate:', date);
+                q.where('date').lte(date);
+            }
+            
+            const limit = parseInt(log.limit);
+            if (!Number.isNaN(limit)) {
+                q.limit(limit);
+            }
+            console.log('limit: ', limit);
+            return q.exec(function(err, result) {
+                if (err) return cb(serviceHelper.error(err));
+                console.log('Found exercises:', result);
+                return cb(serviceHelper.ok(result));
             });
         });
     }
