@@ -26,9 +26,10 @@ router.get('/log', function (req, res) {
         userId: req.query.userId,
         from: req.query.from,
         to: req.query.to,
-        limit: req.query.limit
+        limit: req.query.limit,
+        page: req.query.page
     };
-    userService.loadLogs(query,
+    return userService.loadLogs(query,
         function(response) {
             return new HttpResponse(res, response).buildResponse();
         });

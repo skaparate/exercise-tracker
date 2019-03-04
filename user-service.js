@@ -74,6 +74,9 @@ class UserService {
             }
             const q = Exercise.find({
                 userId: log.userId
+            }, {
+                _id: 0,
+                __v: 0
             });
             let date = new Date(log.from);
             if (isValidDate(date)) {
@@ -87,10 +90,12 @@ class UserService {
             }
             
             const limit = parseInt(log.limit);
-            if (!Number.isNaN(limit)) {
-                q.limit(limit);
-            }
             console.log('limit: ', limit);
+
+            q.setOptions({
+                limit: limit
+            });
+
             return q.exec(function(err, result) {
                 if (err) return cb(serviceHelper.error(err));
                 console.log('Found exercises:', result);
