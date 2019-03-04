@@ -28,7 +28,7 @@ class HttpResponse {
             const entity = data.entity;
             delete data.entity;
             return {
-                error: _formatError(error, entity),
+                error: this._formatError(error, entity),
                 data
             };
         }

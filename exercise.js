@@ -4,7 +4,7 @@ const userService = require('./user-service');
 const HttpResponse = require('./http-response');
 
 router.post('/new-user', function (req, res) {
-    console.debug('Trying to create a new user');
+    console.debug('Trying to create a new user', req.body, res.params);
     userService.createUser({
         username: req.body.username
     }, function (response) {

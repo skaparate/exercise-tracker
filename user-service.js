@@ -5,11 +5,12 @@ const { isValidDate } = require('./utils');
 
 class UserService {
     createUser(data, callback) {
+        console.log('Creating user: ', data);
         if (!data.username) {
             callback(illegal(['username']));
         }
-        this.findUser(data.username, function(err, result) {
-            if (err) return err;
+        this.findUser({ username: data.username }, function(err, result) {
+            if (err) return callback(serviceHelper.error(err));
             if (result) {
                 console.debug('User found: ', result);
                 return callback(serviceHelper.duplicate({
@@ -17,6 +18,7 @@ class UserService {
                     username: data.username
                 }));
             }
+            console.log('Building user model');
             const user = new User(data);
             return user.save(function (saveErr, saved) {
                 if (saveErr) return callback(serviceHelper.error(saveErr));
