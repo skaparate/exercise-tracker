@@ -6,7 +6,7 @@
 function dbManager(mongoose) {
     function openDbConnection(req, res, next) {
         console.debug('Opening database connection');
-        mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, dbName: 'exercise_db' })
+        mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, dbName: 'fcc_exercise_tracker' })
             .then(function () {
                 console.debug('Connected to database');
                 if (next) next();

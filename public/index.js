@@ -26,7 +26,7 @@
                         const v = logs[i];
                         html += `
                         <tr>
-                            <td>${new Date(v.date).toLocaleDateString('en-US')}</td>
+                            <td>${new Date(v.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</td>
                             <td>${v.description}</td>
                             <td>${v.duration}</td>
                         </tr>`;

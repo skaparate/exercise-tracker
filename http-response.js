@@ -4,7 +4,7 @@ class HttpResponse {
         console.debug('HttpResponse: ', serviceResponse);
         
         if (serviceResponse.error) {
-            const data = this._builData(serviceResponse.data, serviceResponse.error);
+            const data = this._buildData(serviceResponse.data, serviceResponse.error);
             switch (serviceResponse.error) {
                 case 'not found':
                 case 'duplicate':
@@ -23,7 +23,7 @@ class HttpResponse {
         }
     }
 
-    _builData(data, error) {
+    _buildData(data, error) {
         if (data.hasOwnProperty('entity')) {
             const entity = data.entity;
             delete data.entity;
