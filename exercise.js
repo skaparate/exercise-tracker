@@ -14,7 +14,7 @@ router.post('/new-user', function (req, res) {
 
 router.post('/add', function (req, res) {
     console.debug('Trying to add an exercise: ', req.body, req.params);
-    userService.addExercise(req.body.exercise,
+    userService.addExercise(req.body,
         function (response) {
             return new HttpResponse(res, response).buildResponse();
         });

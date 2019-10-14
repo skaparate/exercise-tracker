@@ -45,6 +45,7 @@ class UserService {
   }
 
   addExercise(exercise, cb) {
+    console.debug('addExercise:', exercise);
     this.findUser(
       {
         _id: exercise.userId
