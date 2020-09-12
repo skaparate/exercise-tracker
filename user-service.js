@@ -4,14 +4,24 @@ const [User, Exercise] = require("./models");
 const { isValidDate } = require("./utils");
 
 class UserService {
-  createUser(data, callback) {
+  async listUsers() {
+    try {
+      return await User.find({});
+    } catch (e) {
+      console.error("Failed to retrieve user list:", e);
+    }
+    return [];
+  }
+
+  async createUser(data, callback) {
     console.log("Creating user: ", data);
     if (!data.username) {
-      callback(serviceHelper.illegal(["username"]));
+      return serviceHelper.illegal(["username"]);
     }
-    this.findUser({ username: data.username }, function(err, result) {
-      if (err) return callback(serviceHelper.error(err));
-      console.debug("Result:", result);
+
+    try {
+      const result = await this.findUser({ username: data.username });
+
       if (result._data) {
         console.debug("User found: ", result);
         return callback(
@@ -22,104 +32,122 @@ class UserService {
         );
       }
       console.log("Building user model");
-      const user = new User(data);
-      return user.save(function(saveErr, saved) {
-        if (saveErr) return callback(serviceHelper.error(saveErr));
-        return callback(serviceHelper.ok(saved));
-      });
-    });
+      let user = new User(data);
+      user = await user.save();
+      return serviceHelper.ok(user);
+    } catch (e) {
+      console.error("Failed to add user:", e);
+      return serviceHelper.error(e);
+    }
   }
 
-  findUser(by, cb) {
-    function userSearch(error, user) {
-      if (error) return cb(serviceHelper.error(error), null);
+  async findUser(by) {
+    console.debug('findUser:', by);
+    let user;
+
+    try {
+      if (by.hasOwnProperty("_id")) {
+        user = await User.findById(by._id);
+      } else {
+        user = await User.findOne(by);
+      }
       console.debug("Found user:", user);
-      return cb(null, serviceHelper.ok(user));
-    }
-
-    if (by.hasOwnProperty("_id")) {
-      User.findById(by._id, userSearch);
-    } else {
-      User.findOne(by, userSearch);
+      return serviceHelper.ok(user);
+    } catch (e) {
+      return serviceHelper.error(e);
     }
   }
 
-  addExercise(exercise, cb) {
-    console.debug('addExercise:', exercise);
-    this.findUser(
-      {
+  async addExercise(exercise) {
+    console.debug("addExercise:", exercise);
+
+    try {
+      const user = await this.findUser({
         _id: exercise.userId
-      },
-      function(searchErr, user) {
-        if (searchErr) return cb(serviceHelper.error(searchErr));
-        if (!user) {
-          return cb(
-            serviceHelper.notFound({
-              entity: "user",
-              userId: exercise.userId
-            })
-          );
-        }
-        const model = new Exercise(exercise);
-        return model.save(function(saveErr, savedExercise) {
-          if (saveErr) return cb(serviceHelper.error(saveErr));
-          return cb(serviceHelper.ok(savedExercise));
+      });
+
+      if (!user._data) {
+        return serviceHelper.notFound({
+          entity: "user",
+          userId: exercise.userId
         });
       }
-    );
+
+      if (!exercise.date) {
+        exercise.date = new Date();
+      }
+
+      const model = new Exercise(exercise);
+      const {_id, duration, description, date, username} = await model.save();
+      return serviceHelper.ok({
+        _id: user._data._id,
+        duration,
+        description,
+        date: date.toDateString(),
+        username: user._data.username,
+      });
+    } catch (e) {
+      console.error("Could not add exercise:", e);
+      return serviceHelper.error(e);
+    }
   }
 
-  loadLogs(log, cb) {
+  async loadLogs(log, cb) {
     console.log("Loading logs: ", log);
-    this.findUser(
+    const user = await this.findUser({
+      _id: log.userId
+    });
+    console.log("User found:", user);
+
+    if (!user._data) {
+      return;
+      serviceHelper.notFound({
+        entity: "user",
+        userId: log.userId
+      });
+    }
+    const q = Exercise.find(
       {
-        _id: log.userId
+        userId: log.userId
       },
-      function(searchErr, user) {
-        console.log("User found");
-        if (searchErr) return cb(serviceHelper.error(searchErr));
-        if (!user) {
-          return cb(
-            serviceHelper.notFound({
-              entity: "user",
-              userId: log.userId
-            })
-          );
-        }
-        const q = Exercise.find(
-          {
-            userId: log.userId
-          },
-          {
-            _id: 0,
-            __v: 0
-          }
-        );
-        let date = new Date(log.from);
-        if (isValidDate(date)) {
-          console.log("valid fromDate:", date);
-          q.where("date").gte(date);
-        }
-        date = new Date(log.to);
-        if (isValidDate(date)) {
-          console.log("valid toDate:", date);
-          q.where("date").lte(date);
-        }
-
-        const limit = parseInt(log.limit);
-        console.log("limit: ", limit);
-
-        q.setOptions({
-          limit: limit
-        });
-
-        return q.exec(function(err, result) {
-          if (err) return cb(serviceHelper.error(err));
-          console.log("Found exercises:", result);
-          return cb(serviceHelper.ok(result));
-        });
+      {
+        _id: 0,
+        __v: 0
       }
     );
+    let date = new Date(log.from);
+
+    if (isValidDate(date)) {
+      console.log("valid fromDate:", date);
+      q.where("date").gte(date);
+    }
+
+    date = new Date(log.to);
+
+    if (isValidDate(date)) {
+      console.log("valid toDate:", date);
+      q.where("date").lte(date);
+    }
+
+    const limit = parseInt(log.limit);
+    console.log("limit: ", limit);
+
+    q.setOptions({
+      limit: limit
+    });
+
+    try {
+      const result = await q.exec();
+      console.log("Found exercises:", result);
+      return serviceHelper.ok({
+        _id: user._data._id,
+        username: user._data.username,
+        log: result
+      });
+    } catch (e) {
+      console.error("Could not retrieve exercise list:", e);
+      return serviceHelper.error(e);
+    }
   }
 }
 
